@@ -11,24 +11,28 @@ import (
 )
 
 type QRCodeOptions struct {
-	Logo              string  `json:"logo"`
-	Halftone          string  `json:"halftone"`
-	Saturation        int     `json:"saturation"`
-	Padding           float64 `json:"padding"`
-	Border            float64 `json:"border"`
-	Radius            float64 `json:"radius"`
-	LogoSizeMultiplier int    `json:"logo_size_multiplier"`
+	Logo               string  `json:"logo"`
+	Halftone           string  `json:"halftone"`
+	Saturation         int     `json:"saturation"`
+	Padding            float64 `json:"padding"`
+	Border             float64 `json:"border"`
+	BorderColor        string  `json:"border_color"`
+	BorderEdgeColor    string  `json:"border_edge_color"`
+	Radius             float64 `json:"radius"`
+	LogoSizeMultiplier int     `json:"logo_size_multiplier"`
 }
 
 // DefaultQRCodeOptions returns a QRCodeOptions struct with default values
 func DefaultQRCodeOptions() QRCodeOptions {
 	return QRCodeOptions{
-		Logo:              "",
-		Halftone:          "",
-		Saturation:        -90,
-		Padding:           0.03,
-		Border:            0.01,
-		Radius:            1.0/15.0,
+		Logo:               "",
+		Halftone:           "",
+		Saturation:         -90,
+		Padding:            0.03,
+		Border:             0.01,
+		BorderColor:        "black",
+		BorderEdgeColor:    "white",
+		Radius:             1.0 / 15.0,
 		LogoSizeMultiplier: 4,
 	}
 }
@@ -67,15 +71,28 @@ func GenerateQRCode(text string, opt QRCodeOptions) ([]byte, error) {
 
 		expectedWidth := (qrc.Dimension() + 2) * qrwidth
 		padding_px := 0
-		if !HasAlpha(logoImage) {
+		if opt.Border > 0 {
 			padding_px = int(float64(expectedWidth) * opt.Padding)
 		}
 		logoImage = scaleLogoImage(logoImage, expectedWidth, expectedWidth, padding_px, opt.LogoSizeMultiplier)
-		if !HasAlpha(logoImage) {
+		if opt.Border > 0 {
 			if padding_px != 0 {
 				logoImage = AddPadding(logoImage, padding_px)
 			}
-			logoImage = MaskRoundCorners(logoImage, float64(expectedWidth)*opt.Radius, float64(expectedWidth)*opt.Border)
+			borderColor, err := parseColor(opt.BorderColor)
+			if err != nil {
+				return nil, err
+			}
+			borderEdgeColor, err := parseColor(opt.BorderEdgeColor)
+			if err != nil {
+				return nil, err
+			}
+
+			logoImage = MaskRoundCorners(logoImage,
+				float64(expectedWidth)*opt.Radius,
+				float64(expectedWidth)*opt.Border,
+				borderColor, borderEdgeColor,
+			)
 		}
 
 		options = append(

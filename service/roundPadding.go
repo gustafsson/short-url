@@ -50,7 +50,11 @@ func avg8(x, y, ax, ay uint8) uint8 {
 	return uint8((weightedSum + totalWeight/2) / totalWeight)
 }
 
-func MaskRoundCorners(img image.Image, radius, border float64) image.Image {
+func unitary2uint8(x float64) uint8 {
+	return uint8(255 * x)
+}
+
+func MaskRoundCorners(img image.Image, radius, border float64, borderColor, borderEdgeColor color.NRGBA) image.Image {
 	// Create a circular mask with rounded corners
 	w, h := img.Bounds().Dx(), img.Bounds().Dy()
 	// mask := createCircleMask(w, h, radius)
@@ -94,10 +98,20 @@ func MaskRoundCorners(img image.Image, radius, border float64) image.Image {
 		c2, a2, b2 := C(D(x+0.75, y+0.25))
 		c3, a3, b3 := C(D(x+0.25, y+0.75))
 		c4, a4, b4 := C(D(x+0.75, y+0.75))
-		c := uint8(255 * (c1 + c2 + c3 + c4) / 4)
-		a := uint8(255 * (a1 + a2 + a3 + a4) / 4)
-		b := uint8(255 * (b1 + b2 + b3 + b4) / 4)
-		return color.NRGBA{c, c, c, a}, b
+
+		c := (c1 + c2 + c3 + c4) / 4
+		a := (a1 + a2 + a3 + a4) / 4
+		b := (b1 + b2 + b3 + b4) / 4
+
+		nrgba := color.NRGBA{
+			uint8(float64(borderColor.R)*(1.0-c) + float64(borderEdgeColor.R)*c),
+			uint8(float64(borderColor.G)*(1.0-c) + float64(borderEdgeColor.R)*c),
+			uint8(float64(borderColor.B)*(1.0-c) + float64(borderEdgeColor.R)*c),
+			// uint8(float64(borderColor.A) * (1.0 - a) + float64(borderEdgeColor.A) * a),
+			unitary2uint8(a),
+		}
+
+		return nrgba, unitary2uint8(b)
 	}
 
 	for y := 0; y < h; y++ {
@@ -105,10 +119,6 @@ func MaskRoundCorners(img image.Image, radius, border float64) image.Image {
 			t, b := C4(float64(x), float64(y))
 			if t.A > 0 || b < 255 || true {
 				s := newImg.NRGBAAt(x, y)
-				if s.A < 255 {
-					log.Printf("s %v\n", s)
-					panic("woot")
-				}
 				a := uint8((uint32(s.A)*uint32(b) + 127) / 256)
 				c2 := color.NRGBA{
 					blend8(s.R, t.R, t.A),

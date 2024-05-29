@@ -50,6 +50,7 @@ func TestGenerateQRCode(t *testing.T) {
 	opt := DefaultQRCodeOptions()
 	opt.Logo = "example.png"
 	opt.Padding = 0
+	opt.BorderColor = "red"
 	// opt.Halftone = "example.png"
 	qrCodeBytes, err := GenerateQRCode(ShortUrl(id), opt)
 	assert.NoError(t, err, "Generating QR code should not produce an error")
