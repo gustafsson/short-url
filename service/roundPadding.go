@@ -55,8 +55,12 @@ func unitary2uint8(x float64) uint8 {
 }
 
 func MaskRoundCorners(img image.Image, radius, border float64, borderColor, borderEdgeColor color.NRGBA) image.Image {
-	// Create a circular mask with rounded corners
 	w, h := img.Bounds().Dx(), img.Bounds().Dy()
+	if radius < 0 {
+		radius = math.Min(float64(w), float64(h)) / 2.0
+	}
+	radius = math.Max(border*2, radius)
+	// Create a circular mask with rounded corners
 	// mask := createCircleMask(w, h, radius)
 	fw, fh := float64(w), float64(h)
 	newImg := image.NewNRGBA(image.Rect(0, 0, w, h))

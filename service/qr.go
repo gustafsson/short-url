@@ -19,7 +19,7 @@ type QRCodeOptions struct {
 	BorderColor        string  `json:"border_color"`
 	BorderEdgeColor    string  `json:"border_edge_color"`
 	Radius             float64 `json:"radius"`
-	LogoSizeMultiplier int     `json:"logo_size_multiplier"`
+	LogoSizeMultiplier float64 `json:"logo_size_multiplier"`
 }
 
 // DefaultQRCodeOptions returns a QRCodeOptions struct with default values
@@ -37,13 +37,13 @@ func DefaultQRCodeOptions() QRCodeOptions {
 	}
 }
 
-func scaleLogoImage(logoImage image.Image, width, height, padding, logoSizeMultiplier int) image.Image {
+func scaleLogoImage(logoImage image.Image, width, height, padding int, logoSizeMultiplier float64) image.Image {
 	// Rescale the logo to fit within 1/5 of the QR code's dimensions
 	logoW, logoH := float64(logoImage.Bounds().Dx()), float64(logoImage.Bounds().Dy())
 	m := logoSizeMultiplier
 	scale := math.Min(
-		float64(width-padding*m*2)/float64(m)/logoW,
-		float64(height-padding*m*2)/float64(m)/logoH)
+		(float64(width)-float64(padding)*m*2)/float64(m)/logoW,
+		(float64(height)-float64(padding)*m*2)/float64(m)/logoH)
 	return resize.Resize(uint(scale*logoW), uint(scale*logoH), logoImage, resize.Lanczos3)
 }
 
@@ -67,7 +67,7 @@ func GenerateQRCode(text string, opt QRCodeOptions) ([]byte, error) {
 		}
 
 		options = append(
-			options, standard.WithLogoSizeMultiplier(opt.LogoSizeMultiplier))
+			options, standard.WithLogoSizeMultiplier(int(opt.LogoSizeMultiplier)))
 
 		expectedWidth := (qrc.Dimension() + 1) * qrwidth
 		padding_px := 0
@@ -75,7 +75,7 @@ func GenerateQRCode(text string, opt QRCodeOptions) ([]byte, error) {
 			padding_px = int(float64(expectedWidth) * opt.Padding)
 		}
 		logoImage = scaleLogoImage(logoImage, expectedWidth, expectedWidth, padding_px, opt.LogoSizeMultiplier)
-		if opt.Border > 0 {
+		if opt.Border > 0 || opt.Radius != 0 {
 			if padding_px != 0 {
 				logoImage = AddPadding(logoImage, padding_px)
 			}
