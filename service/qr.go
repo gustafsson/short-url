@@ -69,7 +69,7 @@ func GenerateQRCode(text string, opt QRCodeOptions) ([]byte, error) {
 		options = append(
 			options, standard.WithLogoSizeMultiplier(opt.LogoSizeMultiplier))
 
-		expectedWidth := (qrc.Dimension() + 2) * qrwidth
+		expectedWidth := (qrc.Dimension() + 1) * qrwidth
 		padding_px := 0
 		if opt.Border > 0 {
 			padding_px = int(float64(expectedWidth) * opt.Padding)

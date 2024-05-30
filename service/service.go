@@ -15,3 +15,7 @@ func ShortUrl(id string) string {
 func GetRedirect(id string) (string, []byte, error) {
 	return repository.GetRedirect(id)
 }
+
+func SaveRequest(id string, data map[string]interface{}) error {
+	return repository.SaveRequest(id, data)
+}

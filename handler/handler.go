@@ -61,18 +61,24 @@ func redirectId(w http.ResponseWriter, r *http.Request, id string) {
 	}
 
 	link, file, err := service.GetRedirect(id)
+	req := headersToMap(r.Header)
 	if err != nil {
+		req["_ResponseErr"] = err.Error()
 		log.Panicf("%s", err.Error())
 		http.Error(w, "Det där gick visst åt pipsvängen.", http.StatusInternalServerError)
 	} else if file != nil {
+		req["_ResponseFile"] = string(file)
 		w.Header().Set("Content-Type", "text/vcard")
 		w.Header().Set("Content-Disposition", "attachment; filename=\"contact.vcf\"")
 		w.Write(file)
 	} else if link != "" {
+		req["_ResponseLink"] = link
 		http.Redirect(w, r, link, http.StatusFound)
 	} else {
+		req["_ResponseNotFound"] = true
 		http.NotFound(w, r)
 	}
+	service.SaveRequest(id, req)
 }
 
 func generateQRCode(w http.ResponseWriter, r *http.Request) {

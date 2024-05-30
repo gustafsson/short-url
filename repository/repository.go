@@ -7,6 +7,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"time"
 
 	"cloud.google.com/go/firestore"
 	"google.golang.org/grpc/codes"
@@ -39,14 +40,31 @@ func CheckIfExists(id string) (bool, error) {
 }
 
 func SaveURL(id, longURL string) error {
-	_, err := firestoreClient.Collection("urls").Doc(id).Set(context.Background(), map[string]interface{}{
-		"longUrl": longURL,
-	})
+	_, err := firestoreClient.
+		Collection("urls").
+		Doc(id).
+		Set(context.Background(), map[string]interface{}{
+			"longUrl": longURL,
+		})
+	return err
+}
+
+func SaveRequest(id string, data map[string]interface{}) error {
+	isoTime := time.Now().Format("2006-01-02T15:04:05.000000Z07:00")
+	_, err := firestoreClient.
+		Collection("urls").
+		Doc(id).
+		Collection("requests").
+		Doc(isoTime).
+		Set(context.Background(), data)
 	return err
 }
 
 func GetRedirect(id string) (string, []byte, error) {
-	doc, err := firestoreClient.Collection("urls").Doc(id).Get(context.Background())
+	doc, err := firestoreClient.
+		Collection("urls").
+		Doc(id).
+		Get(context.Background())
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
 			return "", nil, nil
