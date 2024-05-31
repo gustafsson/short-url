@@ -54,6 +54,14 @@ func populateStructFromQuery(query url.Values, dest interface{}) error {
 		if queryValue != "" {
 			fieldVal := destVal.Field(i)
 			switch fieldVal.Kind() {
+			case reflect.Bool:
+				if queryValue == "true" {
+					fieldVal.SetBool(true)
+				} else if queryValue == "false" {
+					fieldVal.SetBool(false)
+				} else {
+					return fmt.Errorf("%s: expected true or false got %v", field.Name, queryValue)
+				}
 			case reflect.String:
 				fieldVal.SetString(queryValue)
 			case reflect.Int:

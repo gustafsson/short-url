@@ -20,6 +20,7 @@ type QRCodeOptions struct {
 	BorderEdgeColor    string  `json:"border_edge_color"`
 	Radius             float64 `json:"radius"`
 	LogoSizeMultiplier float64 `json:"logo_size_multiplier"`
+	Transparent        bool    `json:"transparent"`
 }
 
 // DefaultQRCodeOptions returns a QRCodeOptions struct with default values
@@ -34,6 +35,7 @@ func DefaultQRCodeOptions() QRCodeOptions {
 		BorderEdgeColor:    "white",
 		Radius:             1.0 / 15.0,
 		LogoSizeMultiplier: 4,
+		Transparent:        false,
 	}
 }
 
@@ -56,8 +58,14 @@ func GenerateQRCode(text string, opt QRCodeOptions) ([]byte, error) {
 	qrwidth := 41
 	options := []standard.ImageOption{
 		standard.WithQRWidth(uint8(qrwidth)),
-		standard.WithBgTransparent(), standard.WithBgColorRGBHex("#000000"),
 		standard.WithBuiltinImageEncoder(standard.PNG_FORMAT),
+	}
+
+	if opt.Transparent {
+		options = append(options,
+			standard.WithBgTransparent(),
+			standard.WithBgColorRGBHex("#000000"),
+		)
 	}
 
 	if opt.Logo != "" {
