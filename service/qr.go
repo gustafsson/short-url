@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"image"
 	"math"
 	"os"
@@ -22,6 +23,7 @@ type QRCodeOptions struct {
 	LogoSizeMultiplier float64 `json:"logo_size_multiplier"`
 	Transparent        bool    `json:"transparent"`
 	QrWidth            int     `json:"qrwidth"`
+	CorrectionLevel    string  `json:"correctionlevel"`
 }
 
 // DefaultQRCodeOptions returns a QRCodeOptions struct with default values
@@ -38,6 +40,7 @@ func DefaultQRCodeOptions() QRCodeOptions {
 		LogoSizeMultiplier: 4,
 		Transparent:        false,
 		QrWidth:            41,
+		CorrectionLevel:    "medium",
 	}
 }
 
@@ -52,7 +55,21 @@ func scaleLogoImage(logoImage image.Image, width, height, padding int, logoSizeM
 }
 
 func GenerateQRCode(text string, opt QRCodeOptions) ([]byte, error) {
-	qrc, err := qrcode.New(text)
+	ecLevel := qrcode.ErrorCorrectionMedium
+	switch opt.CorrectionLevel {
+	case "low":
+		ecLevel = qrcode.ErrorCorrectionLow
+	case "medium":
+		ecLevel = qrcode.ErrorCorrectionMedium
+	case "high":
+		ecLevel = qrcode.ErrorCorrectionHighest
+	case "quartile":
+		ecLevel = qrcode.ErrorCorrectionQuart
+	default:
+		return nil, fmt.Errorf("expected one of 'low', 'medium', 'high', 'quartile', but got '%s'", opt.CorrectionLevel)
+	}
+
+	qrc, err := qrcode.NewWith(text, qrcode.WithErrorCorrectionLevel(ecLevel))
 	if err != nil {
 		return nil, err
 	}
