@@ -47,35 +47,51 @@ func floatProp(q url.Values, key string, def float64) (float64, error) {
 func populateStructFromQuery(query url.Values, dest interface{}) error {
 	destVal := reflect.ValueOf(dest).Elem()
 
+	// Collect all the expected property names in a set
+	expectedProperties := make(map[string]struct{})
+	for i := 0; i < destVal.NumField(); i++ {
+		field := destVal.Type().Field(i)
+		expectedProperties[strings.ToLower(field.Name)] = struct{}{}
+	}
+
+	// Check for unknown properties
+	for key := range query {
+		if _, found := expectedProperties[key]; !found {
+			return fmt.Errorf("unknown property: %s", key)
+		}
+	}
+
 	for i := 0; i < destVal.NumField(); i++ {
 		field := destVal.Type().Field(i)
 		queryValue := query.Get(strings.ToLower(field.Name))
 
-		if queryValue != "" {
-			fieldVal := destVal.Field(i)
-			switch fieldVal.Kind() {
-			case reflect.Bool:
-				if queryValue == "true" {
-					fieldVal.SetBool(true)
-				} else if queryValue == "false" {
-					fieldVal.SetBool(false)
-				} else {
-					return fmt.Errorf("%s: expected true or false got %v", field.Name, queryValue)
-				}
-			case reflect.String:
-				fieldVal.SetString(queryValue)
-			case reflect.Int:
-				if value, err := strconv.Atoi(queryValue); err == nil {
-					fieldVal.SetInt(int64(value))
-				} else {
-					return fmt.Errorf("%s: %v", field.Name, err)
-				}
-			case reflect.Float64:
-				if value, err := strconv.ParseFloat(queryValue, 64); err == nil {
-					fieldVal.SetFloat(value)
-				} else {
-					return fmt.Errorf("%s: %v", field.Name, err)
-				}
+		if queryValue == "" {
+			continue
+		}
+
+		fieldVal := destVal.Field(i)
+		switch fieldVal.Kind() {
+		case reflect.Bool:
+			if queryValue == "true" {
+				fieldVal.SetBool(true)
+			} else if queryValue == "false" {
+				fieldVal.SetBool(false)
+			} else {
+				return fmt.Errorf("%s: expected true or false got %v", field.Name, queryValue)
+			}
+		case reflect.String:
+			fieldVal.SetString(queryValue)
+		case reflect.Int:
+			if value, err := strconv.Atoi(queryValue); err == nil {
+				fieldVal.SetInt(int64(value))
+			} else {
+				return fmt.Errorf("%s: %v", field.Name, err)
+			}
+		case reflect.Float64:
+			if value, err := strconv.ParseFloat(queryValue, 64); err == nil {
+				fieldVal.SetFloat(value)
+			} else {
+				return fmt.Errorf("%s: %v", field.Name, err)
 			}
 		}
 	}
