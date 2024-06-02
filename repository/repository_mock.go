@@ -38,7 +38,7 @@ func SaveURL(id, longURL string) error {
 	return nil
 }
 
-func SaveRequest(id string, data map[string]interface{}) error {
+func SaveRequest(data map[string]interface{}) error {
 	return nil
 }
 

@@ -49,11 +49,9 @@ func SaveURL(id, longURL string) error {
 	return err
 }
 
-func SaveRequest(id string, data map[string]interface{}) error {
+func SaveRequest(data map[string]interface{}) error {
 	isoTime := time.Now().Format("2006-01-02T15:04:05.000000Z07:00")
 	_, err := firestoreClient.
-		Collection("urls").
-		Doc(id).
 		Collection("requests").
 		Doc(isoTime).
 		Set(context.Background(), data)

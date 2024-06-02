@@ -78,7 +78,8 @@ func redirectId(w http.ResponseWriter, r *http.Request, id string) {
 		req["_ResponseNotFound"] = true
 		http.NotFound(w, r)
 	}
-	service.SaveRequest(id, req)
+	req["_id"] = id
+	service.SaveRequest(req)
 }
 
 func generateQRCode(w http.ResponseWriter, r *http.Request) {
