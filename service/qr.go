@@ -21,6 +21,7 @@ type QRCodeOptions struct {
 	Radius             float64 `json:"radius"`
 	LogoSizeMultiplier float64 `json:"logo_size_multiplier"`
 	Transparent        bool    `json:"transparent"`
+	QrWidth            int     `json:"qrwidth"`
 }
 
 // DefaultQRCodeOptions returns a QRCodeOptions struct with default values
@@ -36,6 +37,7 @@ func DefaultQRCodeOptions() QRCodeOptions {
 		Radius:             1.0 / 15.0,
 		LogoSizeMultiplier: 4,
 		Transparent:        false,
+		QrWidth:            41,
 	}
 }
 
@@ -55,9 +57,8 @@ func GenerateQRCode(text string, opt QRCodeOptions) ([]byte, error) {
 		return nil, err
 	}
 
-	qrwidth := 41
 	options := []standard.ImageOption{
-		standard.WithQRWidth(uint8(qrwidth)),
+		standard.WithQRWidth(uint8(opt.QrWidth)),
 		standard.WithBuiltinImageEncoder(standard.PNG_FORMAT),
 	}
 
@@ -77,7 +78,7 @@ func GenerateQRCode(text string, opt QRCodeOptions) ([]byte, error) {
 		options = append(
 			options, standard.WithLogoSizeMultiplier(int(opt.LogoSizeMultiplier)))
 
-		expectedWidth := (qrc.Dimension() + 1) * qrwidth
+		expectedWidth := (qrc.Dimension() + 1) * opt.QrWidth
 		padding_px := 0
 		if opt.Border > 0 {
 			padding_px = int(float64(expectedWidth) * opt.Padding)
